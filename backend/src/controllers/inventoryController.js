@@ -1,6 +1,7 @@
 const Inventory = require('../models/inventory');
 const Product = require('../models/product');
 const Warehouse = require('../models/warehouse');
+const { sequelize } = require('../utils/database');
 const { measureDbQuery } = require('../utils/metrics');
 const { Op } = require('sequelize');
 
