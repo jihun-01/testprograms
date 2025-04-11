@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # MySQL 데이터베이스
+  mysql:
+    image: mysql:8.0
+    container_name: logistics-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: logistics_db
+      MYSQL_USER: logistics_user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/my.cnf:/etc/mysql/conf.d/my.cnf
+      - mysql-data:/var/lib/mysql
+    networks:
+      - logistics-network
+
+  # 백엔드 API 서버
+  backend:
+    build: ./backend
+    container_name: logistics-backend
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=logistics_db
+      - DB_USER=logistics_user
+      - DB_PASSWORD=password
+      - JWT_SECRET=your_jwt_secret_key
+    ports:
+      - "3000:3000"
+      - "9090:9090"  # Prometheus 메트릭용 포트
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - logistics-network
+    command: npm run dev  # 개발 모드로 실행
+
+  # 프론트엔드 웹 애플리케이션
+  frontend:
+    build: ./frontend
+    container_name: logistics-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - logistics-network
+
+  # Prometheus (모니터링)
+  prometheus:
+    image: prom/prometheus:v2.42.0
+    container_name: logistics-prometheus
+    restart: always
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - logistics-network
+
+  # Grafana (대시보드)
+  grafana:
+    image: grafana/grafana:9.3.2
+    container_name: logistics-grafana
+    restart: always
+    depends_on:
+      - prometheus
+      - loki
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    networks:
+      - logistics-network
+
+  # Loki (로그 저장)
+  loki:
+    image: grafana/loki:2.7.4
+    container_name: logistics-loki
+    restart: always
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki-config.yaml:/etc/loki/loki.yaml
+      - loki-data:/data
+    command: -config.file=/etc/loki/loki.yaml
+    networks:
+      - logistics-network
+
+networks:
+  logistics-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  prometheus-data:
+  grafana-data:
+  loki-data:
