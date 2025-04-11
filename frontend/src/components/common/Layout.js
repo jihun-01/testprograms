@@ -3,7 +3,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import '../assets/styles/layout.css';
+import '../../assets/styles/layout.css';
 
 const Layout = () => {
   // 로그인 상태 확인

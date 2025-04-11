@@ -16,22 +16,22 @@ import './assets/styles/app.css';
 
 function App() {
   return (
-    <Provider store={store}>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="products/*" element={<Products />} />
-            <Route path="warehouses/*" element={<Warehouses />} />
-            <Route path="inventory/*" element={<Inventory />} />
-            <Route path="orders/*" element={<Orders />} />
-            <Route path="shipments/*" element={<Shipments />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
-        </Routes>
-      </Router>
-    </Provider>
+    <div className="App" style={{ minWidth: '320px' }}>
+       <Provider store={store}>
+         <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Dashboard />} />                <Route path="products/*" element={<Products />} />
+              <Route path="warehouses/*" element={<Warehouses />} />
+              <Route path="inventory/*" element={<Inventory />} />
+              <Route path="orders/*" element={<Orders />} />
+              <Route path="shipments/*" element={<Shipments />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>            </Routes>
+          </Router>
+        </Provider>
+      </div>
   );
 }
 

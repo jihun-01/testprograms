@@ -1,10 +1,15 @@
 /* 전역 스타일 */
-body {
-    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-      Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: #f8f9fa;
-  }
-  
+body, html {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  writing-mode: horizontal-tb !important; /* 강제로 가로 모드 적용 */
+  text-orientation: mixed;
+  word-break: keep-all; /* 한글 단어 분리 방지 */
+  overflow-wrap: break-word;
+}
+[style*="writing-mode"], [class*="vertical"] {
+  writing-mode: horizontal-tb !important;
+  text-orientation: mixed !important;
+}
   /* 타임라인 스타일 */
   .timeline {
     position: relative;
@@ -103,3 +108,44 @@ body {
   .card.bg-danger:hover {
     transform: translateY(-5px);
   }
+  /* frontend/src/assets/styles/app.css에 추가 */
+
+/* 기본 스타일링 */
+.login-container {
+  width: 100%;
+  max-width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 최소 너비 설정으로 레이아웃 보호 */
+.card {
+  min-width: 300px;
+  width: 100%;
+}
+
+/* 미디어 쿼리를 사용하여 작은 화면에서의 동작 정의 */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 10px;
+  }
+  
+  /* 모든 텍스트에 대해 가로 정렬 강제 */
+  body, html, input, button, h1, h2, h3, h4, h5, h6, p, span, div {
+    writing-mode: horizontal-tb !important;
+    text-orientation: mixed !important;
+    min-width: 0;
+    width: auto;
+  }
+  
+  /* 폼 요소 전체 너비 사용 */
+  .form-control, .btn {
+    width: 100%;
+  }
+}
+
+/* 레이아웃 추가 보호 */
+.container-fluid, .container, .row, .col {
+  overflow-x: visible;
+  min-width: 0;
+}

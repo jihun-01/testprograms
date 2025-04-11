@@ -55,14 +55,29 @@
   
   @media (max-width: 768px) {
     .sidebar {
-      margin-left: -250px;
+      position: fixed;
+      width: 100%;
+      height: auto;
+      z-index: 1030;
+      margin-left: 0;
+      top: 56px;
+      overflow-y: auto;
+      max-height: 50vh;
+      display: none; /* 기본적으로 숨김 */
     }
     
     .sidebar.show {
-      margin-left: 0;
+      display: block;
     }
     
     .main-content {
       margin-left: 0;
+      width: 100%;
+      min-width: 320px; /* 최소 너비 설정 */
+    }
+    
+    /* 모바일 메뉴 버튼 표시 */
+    .navbar-toggle {
+      display: block;
     }
   }

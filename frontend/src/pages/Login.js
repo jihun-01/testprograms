@@ -49,9 +49,9 @@ const Login = () => {
   };
   
   return (
-    <Container fluid className="login-container vh-100 d-flex align-items-center justify-content-center bg-light">
-      <Row className="justify-content-center">
-        <Col md={6} lg={4}>
+    <Container className="login-container d-flex align-items-center justify-content-center vh-100">
+      <Row className="justify-content-center w-100">
+        <Col xs={12} sm={10} md={8} lg={6} xl={4}>
           <Card className="shadow-lg">
             <Card.Body className="p-5">
               <div className="text-center mb-4">
