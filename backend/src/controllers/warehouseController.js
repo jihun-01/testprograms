@@ -2,6 +2,7 @@ const Warehouse = require('../models/warehouse');
 const Inventory = require('../models/inventory');
 const { measureDbQuery } = require('../utils/metrics');
 const { Op } = require('sequelize');
+const { sequelize } = require('../utils/database');
 
 // 모든 창고 조회
 exports.getAllWarehouses = async (req, res, next) => {
