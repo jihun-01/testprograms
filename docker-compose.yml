@@ -96,7 +96,7 @@ services:
 
   # Loki (로그 저장)
   loki:
-    image: grafana/loki:2.7.4
+    image: grafana/loki:2.6.1
     container_name: logistics-loki
     restart: always
     ports:
