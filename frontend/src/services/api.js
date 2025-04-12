@@ -26,11 +26,22 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // 인증 에러 처리 (401)
     if (error.response && error.response.status === 401) {
-      // 인증 에러 처리
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      localStorage.removeItem('username');
+      
+      // 현재 URL이 로그인 페이지가 아닌 경우에만 리다이렉트
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
+    
+    // 권한 없음 에러 처리 (403)
+    if (error.response && error.response.status === 403) {
+      console.error('접근 권한이 없습니다:', error.response.data);
+    }
+    
     return Promise.reject(error);
   }
 );

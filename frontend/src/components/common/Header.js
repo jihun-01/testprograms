@@ -8,6 +8,7 @@ const Header = () => {
   const username = localStorage.getItem('username') || '사용자';
   
   const handleLogout = () => {
+    // 인증 정보 삭제
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     navigate('/login');

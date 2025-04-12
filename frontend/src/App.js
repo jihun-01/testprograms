@@ -12,7 +12,7 @@ import Shipments from './pages/Shipments';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './assets/styles/app.css';
+import './components/common/assets/styles/app.css';
 
 function App() {
   return (

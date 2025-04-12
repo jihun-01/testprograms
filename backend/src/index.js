@@ -3,10 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const { setupPrometheusMetrics } = require('./utils/metrics');
+const { setupPrometheusMetrics } = require('backend/utils/metrics');
 const errorHandler = require('./middlewares/errorHandler');
 
 // Routes
+const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const warehouseRoutes = require('./routes/warehouseRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
@@ -29,6 +30,7 @@ app.use(morgan('combined'));
 setupPrometheusMetrics(app);
 
 // API 라우트
+app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/inventory', inventoryRoutes);
