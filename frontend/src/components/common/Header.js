@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar, Nav, Dropdown } from 'react-bootstrap';
+import { Navbar, Nav, Dropdown, Container } from 'react-bootstrap';
 import { BsPersonCircle, BsBell } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,10 +16,14 @@ const Header = () => {
   
   return (
     <Navbar bg="white" expand="lg" className="border-bottom shadow-sm py-2">
-      <div className="d-flex justify-content-between align-items-center w-100 px-4">
+      <Container fluid>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         
-        <div className="d-flex align-items-center">
+        {/* 왼쪽 공간 확보를 위한 빈 요소 */}
+        <Navbar.Brand className="invisible">물류 관리 시스템</Navbar.Brand>
+        
+        {/* 오른쪽 정렬을 위한 ms-auto 클래스 추가 */}
+        <div className="d-flex align-items-center ms-auto">
           <Dropdown align="end" className="me-3">
             <Dropdown.Toggle variant="light" id="notification-dropdown" className="border-0 position-relative">
               <BsBell size={22} />
@@ -61,7 +65,7 @@ const Header = () => {
             </Dropdown.Menu>
           </Dropdown>
         </div>
-      </div>
+      </Container>
     </Navbar>
   );
 };

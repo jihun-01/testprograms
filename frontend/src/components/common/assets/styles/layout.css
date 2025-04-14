@@ -1,83 +1,105 @@
 .layout-container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
   
-  .layout-content {
-    display: flex;
-    flex: 1;
-  }
+.layout-content {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
   
+.sidebar {
+  width: 250px;
+  min-height: calc(100vh - 56px);
+  position: fixed;
+  left: 0;
+  top: 56px;
+  bottom: 0;
+  overflow-y: auto;
+  z-index: 100;
+  transition: all 0.3s;
+}
+  
+.sidebar-header {
+  padding: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+  
+.sidebar-link {
+  color: rgba(255, 255, 255, 0.7);
+  border-left: 3px solid transparent;
+  padding: 12px 15px;
+  transition: all 0.2s;
+}
+  
+.sidebar-link:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left-color: rgba(255, 255, 255, 0.5);
+}
+  
+.sidebar-link.active {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-left-color: #007bff;
+}
+  
+.main-content {
+  flex: 1;
+  margin-left: 250px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 56px);
+  width: calc(100% - 250px); /* 명시적 너비 설정 */
+  max-width: 100%; /* 최대 너비 제한 */
+  overflow-x: hidden; /* 가로 스크롤 방지 */
+}
+
+/* 네비게이션 바 수정 */
+.navbar .container-fluid {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* 드롭다운 메뉴 오른쪽 정렬 */
+.dropdown-menu-end {
+  right: 0;
+  left: auto;
+}
+  
+@media (max-width: 768px) {
   .sidebar {
-    width: 250px;
-    min-height: calc(100vh - 56px);
     position: fixed;
-    left: 0;
+    width: 100%;
+    height: auto;
+    z-index: 1030;
+    margin-left: 0;
     top: 56px;
-    bottom: 0;
     overflow-y: auto;
-    z-index: 100;
-    transition: all 0.3s;
-  }
+    max-height: 50vh;
+    display: none; /* 기본적으로 숨김 */
   
-  .sidebar-header {
-    padding: 15px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .sidebar-link {
-    color: rgba(255, 255, 255, 0.7);
-    border-left: 3px solid transparent;
-    padding: 12px 15px;
-    transition: all 0.2s;
-  }
-  
-  .sidebar-link:hover {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-left-color: rgba(255, 255, 255, 0.5);
-  }
-  
-  .sidebar-link.active {
-    color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.15);
-    border-left-color: #007bff;
+  .sidebar.show {
+    display: block;
   }
   
   .main-content {
-    flex: 1;
-    margin-left: 250px;
-    padding: 20px;
-    background-color: #f8f9fa;
-    min-height: calc(100vh - 56px);
+    margin-left: 0;
+    width: 100%;
+    min-width: 320px; /* 최소 너비 설정 */
+    padding: 10px;
   }
   
-  @media (max-width: 768px) {
-    .sidebar {
-      position: fixed;
-      width: 100%;
-      height: auto;
-      z-index: 1030;
-      margin-left: 0;
-      top: 56px;
-      overflow-y: auto;
-      max-height: 50vh;
-      display: none; /* 기본적으로 숨김 */
-    }
-    
-    .sidebar.show {
-      display: block;
-    }
-    
-    .main-content {
-      margin-left: 0;
-      width: 100%;
-      min-width: 320px; /* 최소 너비 설정 */
-    }
-    
-    /* 모바일 메뉴 버튼 표시 */
-    .navbar-toggle {
-      display: block;
-    }
+  /* 모바일 메뉴 버튼 표시 */
+  .navbar-toggle {
+    display: block;
   }
+}
+}

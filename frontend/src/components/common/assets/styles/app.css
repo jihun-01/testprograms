@@ -5,110 +5,132 @@ body, html {
   text-orientation: mixed;
   word-break: keep-all; /* 한글 단어 분리 방지 */
   overflow-wrap: break-word;
+  overflow-x: hidden; /* 가로 스크롤 방지 */
 }
+
 [style*="writing-mode"], [class*="vertical"] {
   writing-mode: horizontal-tb !important;
   text-orientation: mixed !important;
 }
-  /* 타임라인 스타일 */
-  .timeline {
-    position: relative;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+
+/* 네비게이션 바 수정 */
+.navbar .container-fluid {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* 드롭다운 메뉴 우측 정렬 */
+.dropdown-menu {
+  right: 0;
+  left: auto;
+}
+
+/* 타임라인 스타일 */
+.timeline {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 20px;
+  width: 2px;
+  background-color: #e9ecef;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 25px;
+  padding-left: 45px;
+}
+
+.timeline-item:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 15px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #007bff;
+}
+
+.timeline-date {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 5px;
+}
+
+.timeline-content {
+  padding: 10px;
+  border-radius: 5px;
+  background-color: #f8f9fa;
+}
+
+/* 테이블 내의 버튼 간격 */
+.table button {
+  margin-right: 5px;
+}
+
+.table button:last-child {
+  margin-right: 0;
+}
+
+/* 메인 컨텐츠 영역 */
+.main-content {
+  padding: 20px;
+}
+
+/* 폼 요소 */
+.form-label {
+  font-weight: 500;
+}
+
+/* 카드 스타일 */
+.card {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  margin-bottom: 1.5rem;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* 로그인 페이지 스타일 */
+.login-container {
+  background-color: #f8f9fa;
+}
+
+/* 대시보드 카드 스타일 */
+.card.bg-primary,
+.card.bg-success,
+.card.bg-info,
+.card.bg-warning,
+.card.bg-danger {
+  transition: transform 0.3s;
+}
+
+.card.bg-primary:hover,
+.card.bg-success:hover,
+.card.bg-info:hover,
+.card.bg-warning:hover,
+.card.bg-danger:hover {
+  transform: translateY(-5px);
+}
+
+/* 반응형 설정 */
+@media (max-width: 1200px) {
+  .container-fluid {
+    padding-left: 15px;
+    padding-right: 15px;
   }
-  
-  .timeline:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 20px;
-    width: 2px;
-    background-color: #e9ecef;
-  }
-  
-  .timeline-item {
-    position: relative;
-    margin-bottom: 25px;
-    padding-left: 45px;
-  }
-  
-  .timeline-item:before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 15px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #007bff;
-  }
-  
-  .timeline-date {
-    font-size: 0.85rem;
-    color: #6c757d;
-    margin-bottom: 5px;
-  }
-  
-  .timeline-content {
-    padding: 10px;
-    border-radius: 5px;
-    background-color: #f8f9fa;
-  }
-  
-  /* 테이블 내의 버튼 간격 */
-  .table button {
-    margin-right: 5px;
-  }
-  
-  .table button:last-child {
-    margin-right: 0;
-  }
-  
-  /* 메인 컨텐츠 영역 */
-  .main-content {
-    padding: 20px;
-  }
-  
-  /* 폼 요소 */
-  .form-label {
-    font-weight: 500;
-  }
-  
-  /* 카드 스타일 */
-  .card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    margin-bottom: 1.5rem;
-  }
-  
-  .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-  }
-  
-  /* 로그인 페이지 스타일 */
-  .login-container {
-    background-color: #f8f9fa;
-  }
-  
-  /* 대시보드 카드 스타일 */
-  .card.bg-primary,
-  .card.bg-success,
-  .card.bg-info,
-  .card.bg-warning,
-  .card.bg-danger {
-    transition: transform 0.3s;
-  }
-  
-  .card.bg-primary:hover,
-  .card.bg-success:hover,
-  .card.bg-info:hover,
-  .card.bg-warning:hover,
-  .card.bg-danger:hover {
-    transform: translateY(-5px);
-  }
-  /* frontend/src/assets/styles/app.css에 추가 */
+}
 
 /* 기본 스타일링 */
 .login-container {
@@ -142,10 +164,26 @@ body, html {
   .form-control, .btn {
     width: 100%;
   }
+  
+  /* 테이블 반응형 처리 */
+  .table-responsive {
+    overflow-x: auto;
+  }
 }
 
 /* 레이아웃 추가 보호 */
 .container-fluid, .container, .row, .col {
   overflow-x: visible;
   min-width: 0;
+}
+
+/* 우측 드롭다운 메뉴가 잘리지 않도록 보호 */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  left: auto;
+  right: 0;
 }

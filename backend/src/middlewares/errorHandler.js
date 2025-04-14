@@ -1,4 +1,4 @@
-const { metrics } = require('../utils/metrics');
+const { metrics } = require('../../utils/metrics');
 
 // 에러 처리 미들웨어
 const errorHandler = (err, req, res, next) => {
