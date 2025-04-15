@@ -61,35 +61,44 @@ const ProductForm = () => {
         description: ''
       };
 
-  const handleSubmit = async (values, { setSubmitting, setErrors }) => {
-    try {
-      setIsSubmitting(true);
-      
-      if (isEditMode) {
-        await dispatch(updateProduct(id, values));
-        alert('상품이 수정되었습니다.');
-      } else {
-        await dispatch(createProduct(values));
-        alert('상품이 등록되었습니다.');
-      }
-      
-      navigate('/products');
-    } catch (error) {
-      if (error.response && error.response.data && error.response.data.errors) {
-        // 서버 측 유효성 검증 오류 처리
-        const serverErrors = {};
-        error.response.data.errors.forEach(err => {
-          serverErrors[err.field] = err.message;
-        });
-        setErrors(serverErrors);
-      } else {
-        alert(error.response?.data?.message || '오류가 발생했습니다.');
-      }
-    } finally {
-      setIsSubmitting(false);
-      setSubmitting(false);
-    }
-  };
+      const handleSubmit = async (values, { setSubmitting, setErrors }) => {
+        try {
+          setIsSubmitting(true);
+          
+          // 데이터 형변환 추가
+          const formattedValues = {
+            ...values,
+            price: parseFloat(values.price),
+            weight: values.weight ? parseFloat(values.weight) : null,
+            dimensions: values.dimensions || null,
+            description: values.description || null
+          };
+          
+          if (isEditMode) {
+            await dispatch(updateProduct(id, formattedValues));
+            alert('상품이 수정되었습니다.');
+          } else {
+            await dispatch(createProduct(formattedValues));
+            alert('상품이 등록되었습니다.');
+          }
+          
+          navigate('/products');
+        } catch (error) {
+          if (error.response && error.response.data && error.response.data.errors) {
+            // 서버 측 유효성 검증 오류 처리
+            const serverErrors = {};
+            error.response.data.errors.forEach(err => {
+              serverErrors[err.field] = err.message;
+            });
+            setErrors(serverErrors);
+          } else {
+            alert(error.response?.data?.message || '오류가 발생했습니다.');
+          }
+        } finally {
+          setIsSubmitting(false);
+          setSubmitting(false);
+        }
+      };
 
   if (isEditMode && loading) {
     return (

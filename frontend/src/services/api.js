@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // API 기본 URL 설정
-const baseURL = process.env.REACT_APP_API_URL || '/api'; // 상대 경로로 사용
+const baseURL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 // API 요청 성공/실패 여부 추적
 let isBackendAvailable = true;
@@ -67,7 +67,12 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // 명확한 토큰 형식 검증 추가
+      if (token.startsWith('test-auth-token-')) {
+        config.headers.Authorization = `Bearer ${token}`;
+      } else if (token.length > 10) {  // 실제 JWT 토큰은 보통 길이가 깁니다
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },

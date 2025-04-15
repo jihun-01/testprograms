@@ -1,99 +1,10 @@
-const { Order, OrderStatus } = require('../models/order');
-const OrderDetail = require('../models/orderDetail');
-const Customer = require('../models/customer');
-const Product = require('../models/product');
-const Inventory = require('../models/inventory');
-const { sequelize } = require('../utils/database');
-const { measureDbQuery } = require('../utils/metrics');
-const { Op } = require('sequelize');
-
-// 모든 주문 조회
-exports.getAllOrders = async (req, res, next) => {
-  try {
-    // 쿼리 파라미터로 필터링 조건 받기
-    const { customer_id, status_id, start_date, end_date } = req.query;
-    
-    // 필터링 조건 구성
-    const whereCondition = {};
-    
-    if (customer_id) {
-      whereCondition.customer_id = customer_id;
-    }
-    
-    if (status_id) {
-      whereCondition.status_id = status_id;
-    }
-    
-    if (start_date || end_date) {
-      whereCondition.order_date = {};
-      
-      if (start_date) {
-        whereCondition.order_date[Op.gte] = new Date(start_date);
-      }
-      
-      if (end_date) {
-        whereCondition.order_date[Op.lte] = new Date(end_date);
-      }
-    }
-    
-    // 메트릭 측정과 함께 쿼리 실행
-    const orders = await measureDbQuery(
-      'findAll',
-      'orders',
-      () => Order.findAll({
-        where: whereCondition,
-        include: [
-          { model: Customer },
-          { model: OrderStatus, as: 'status' }
-        ],
-        order: [['order_date', 'DESC']]
-      })
-    );
-    
-    res.status(200).json(orders);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// 특정 주문 조회
-exports.getOrderById = async (req, res, next) => {
-  try {
-    const orderId = req.params.id;
-    
-    const order = await measureDbQuery(
-      'findByPk',
-      'orders',
-      () => Order.findByPk(orderId, {
-        include: [
-          { model: Customer },
-          { model: OrderStatus, as: 'status' },
-          {
-            model: OrderDetail,
-            include: [
-              { model: Product },
-              { model: Warehouse }
-            ]
-          }
-        ]
-      })
-    );
-    
-    if (!order) {
-      return res.status(404).json({ message: '주문을 찾을 수 없습니다.' });
-    }
-    
-    res.status(200).json(order);
-  } catch (error) {
-    next(error);
-  }
-};
-
 // 주문 생성
 exports.createOrder = async (req, res, next) => {
-  const transaction = await sequelize.transaction();
+  let transaction;
   
   try {
+    transaction = await sequelize.transaction();
+    
     const {
       customer_id,
       shipping_address,
@@ -234,14 +145,18 @@ exports.createOrder = async (req, res, next) => {
     
     res.status(201).json(createdOrder);
   } catch (error) {
-    await transaction.rollback();
+    if (transaction) await transaction.rollback();
     next(error);
   }
 };
 
 // 주문 상태 업데이트
 exports.updateOrderStatus = async (req, res, next) => {
+  let transaction;
+  
   try {
+    transaction = await sequelize.transaction();
+    
     const orderId = req.params.id;
     const { status_id } = req.body;
     
@@ -249,10 +164,11 @@ exports.updateOrderStatus = async (req, res, next) => {
     const order = await measureDbQuery(
       'findByPk',
       'orders',
-      () => Order.findByPk(orderId)
+      () => Order.findByPk(orderId, { transaction })
     );
     
     if (!order) {
+      await transaction.rollback();
       return res.status(404).json({ message: '주문을 찾을 수 없습니다.' });
     }
     
@@ -260,10 +176,11 @@ exports.updateOrderStatus = async (req, res, next) => {
     const status = await measureDbQuery(
       'findByPk',
       'order_status',
-      () => OrderStatus.findByPk(status_id)
+      () => OrderStatus.findByPk(status_id, { transaction })
     );
     
     if (!status) {
+      await transaction.rollback();
       return res.status(404).json({ message: '존재하지 않는 주문 상태입니다.' });
     }
     
@@ -271,8 +188,10 @@ exports.updateOrderStatus = async (req, res, next) => {
     await measureDbQuery(
       'update',
       'orders',
-      () => order.update({ status_id })
+      () => order.update({ status_id }, { transaction })
     );
+    
+    await transaction.commit();
     
     // 업데이트된 주문 정보 조회
     const updatedOrder = await measureDbQuery(
@@ -288,15 +207,18 @@ exports.updateOrderStatus = async (req, res, next) => {
     
     res.status(200).json(updatedOrder);
   } catch (error) {
+    if (transaction) await transaction.rollback();
     next(error);
   }
 };
 
 // 주문 취소
 exports.cancelOrder = async (req, res, next) => {
-  const transaction = await sequelize.transaction();
+  let transaction;
   
   try {
+    transaction = await sequelize.transaction();
+    
     const orderId = req.params.id;
     
     // 주문 조회
@@ -366,7 +288,7 @@ exports.cancelOrder = async (req, res, next) => {
     
     res.status(200).json({ message: '주문이 취소되었습니다.' });
   } catch (error) {
-    await transaction.rollback();
+    if (transaction) await transaction.rollback();
     next(error);
   }
 };

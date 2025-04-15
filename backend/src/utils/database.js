@@ -22,20 +22,32 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
 });
 
 // 데이터베이스 연결 함수
-async function connectToDatabase() {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
-    
-    // 개발 환경에서만 모델 동기화
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync();
-      console.log('All models were synchronized successfully.');
+async function connectToDatabase(retries = 5, delay = 5000) {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      await sequelize.authenticate();
+      console.log('Database connection has been established successfully.');
+      
+      // 개발 환경에서만 모델 동기화
+      if (process.env.NODE_ENV === 'development') {
+        await sequelize.sync();
+        console.log('All models were synchronized successfully.');
+      }
+      return;
+    } catch (error) {
+      lastError = error;
+      console.error(`Database connection attempt ${attempt}/${retries} failed:`, error.message);
+      
+      if (attempt < retries) {
+        console.log(`Retrying in ${delay/1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-    throw error;
   }
+  
+  throw new Error(`Failed to connect to database after ${retries} attempts: ${lastError.message}`);
 }
 
 module.exports = {

@@ -120,8 +120,19 @@ const OrderForm = () => {
     try {
       setSubmitting(true);
       
+      // 데이터 형변환 추가
+      const formattedValues = {
+        ...values,
+        customer_id: parseInt(values.customer_id, 10),
+        items: values.items.map(item => ({
+          product_id: parseInt(item.product_id, 10),
+          warehouse_id: parseInt(item.warehouse_id, 10),
+          quantity: parseInt(item.quantity, 10)
+        }))
+      };
+      
       // 재고 유효성 검증
-      for (const item of values.items) {
+      for (const item of formattedValues.items) {
         const inventory = getInventoryInfo(item.product_id, item.warehouse_id);
         
         if (!inventory) {
@@ -141,7 +152,7 @@ const OrderForm = () => {
         }
       }
       
-      await api.post('/orders', values);
+      await api.post('/orders', formattedValues);
       alert('주문이 등록되었습니다.');
       navigate('/orders');
     } catch (error) {

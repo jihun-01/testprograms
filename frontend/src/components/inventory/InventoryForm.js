@@ -98,39 +98,50 @@ const InventoryForm = () => {
       };
 
   const handleSubmit = async (values, { setErrors }) => {
-    try {
-      setSubmitting(true);
-      
-      if (isEditMode) {
-        await api.put(`/inventory/${id}`, values);
-        alert('재고 정보가 수정되었습니다.');
-      } else {
-        await api.post('/inventory', values);
-        alert('재고가 등록되었습니다.');
-      }
-      
-      navigate('/inventory');
-    } catch (error) {
-      if (error.response && error.response.data) {
-        if (error.response.data.errors) {
-          // 서버 측 유효성 검증 오류 처리
-          const serverErrors = {};
-          error.response.data.errors.forEach(err => {
-            serverErrors[err.field] = err.message;
-          });
-          setErrors(serverErrors);
-        } else if (error.response.data.message) {
-          alert(error.response.data.message);
-        } else {
-          alert('오류가 발생했습니다.');
-        }
+  try {
+    setSubmitting(true);
+    
+    // 데이터 형변환 추가
+    const formattedValues = {
+      ...values,
+      product_id: parseInt(values.product_id, 10),
+      warehouse_id: parseInt(values.warehouse_id, 10),
+      quantity: parseInt(values.quantity, 10),
+      min_stock_level: parseInt(values.min_stock_level, 10),
+      max_stock_level: values.max_stock_level ? parseInt(values.max_stock_level, 10) : null,
+      location_in_warehouse: values.location_in_warehouse || null
+    };
+    
+    if (isEditMode) {
+      await api.put(`/inventory/${id}`, formattedValues);
+      alert('재고 정보가 수정되었습니다.');
+    } else {
+      await api.post('/inventory', formattedValues);
+      alert('재고가 등록되었습니다.');
+    }
+    
+    navigate('/inventory');
+  } catch (error) {
+    if (error.response && error.response.data) {
+      if (error.response.data.errors) {
+        // 서버 측 유효성 검증 오류 처리
+        const serverErrors = {};
+        error.response.data.errors.forEach(err => {
+          serverErrors[err.field] = err.message;
+        });
+        setErrors(serverErrors);
+      } else if (error.response.data.message) {
+        alert(error.response.data.message);
       } else {
         alert('오류가 발생했습니다.');
       }
-    } finally {
-      setSubmitting(false);
+    } else {
+      alert('오류가 발생했습니다.');
     }
-  };
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   if (loading) {
     return (

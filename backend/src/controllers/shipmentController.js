@@ -16,17 +16,9 @@ exports.getAllShipments = async (req, res, next) => {
     // 필터링 조건 구성
     const whereCondition = {};
     
-    if (order_id) {
-      whereCondition.order_id = order_id;
-    }
-    
-    if (warehouse_id) {
-      whereCondition.warehouse_id = warehouse_id;
-    }
-    
-    if (status) {
-      whereCondition.status = status;
-    }
+    if (order_id) params.order_id = order_id;
+    if (warehouse_id) params.warehouse_id = warehouse_id;
+    if (status) params.status = status;
     
     if (start_date || end_date) {
       whereCondition.shipment_date = {};
@@ -105,9 +97,11 @@ exports.getShipmentById = async (req, res, next) => {
 
 // 출고 생성
 exports.createShipment = async (req, res, next) => {
-  const transaction = await sequelize.transaction();
+  let transaction;
   
   try {
+    transaction = await sequelize.transaction();
+    
     const { order_id, warehouse_id, tracking_number, carrier } = req.body;
     
     // 주문 조회
@@ -182,16 +176,18 @@ exports.createShipment = async (req, res, next) => {
     
     res.status(201).json(createdShipment);
   } catch (error) {
-    await transaction.rollback();
+    if (transaction) await transaction.rollback();
     next(error);
   }
 };
 
 // 출고 상태 업데이트
 exports.updateShipmentStatus = async (req, res, next) => {
-  const transaction = await sequelize.transaction();
+  let transaction;
   
   try {
+    transaction = await sequelize.transaction();
+    
     const shipmentId = req.params.id;
     const { status, tracking_number, carrier } = req.body;
     
@@ -260,7 +256,7 @@ exports.updateShipmentStatus = async (req, res, next) => {
     
     res.status(200).json(updatedShipment);
   } catch (error) {
-    await transaction.rollback();
+    if (transaction) await transaction.rollback();
     next(error);
   }
 };

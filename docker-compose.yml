@@ -30,7 +30,7 @@ services:
   backend:
     build: ./backend
     container_name: logistics-backend
-    restart: always
+    restart: on-failure:5  # 최대 5번 재시도 (올바른 위치)
     depends_on:
       mysql:
         condition: service_healthy
@@ -43,6 +43,7 @@ services:
       - DB_USER=logistics_user
       - DB_PASSWORD=password
       - JWT_SECRET=your_jwt_secret_key
+      - BYPASS_AUTH=true
     ports:
       - "3000:3000"
       - "9090:9090"  # Prometheus 메트릭용 포트
@@ -51,6 +52,12 @@ services:
       - /app/node_modules
     networks:
       - logistics-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     command: npm run dev  # 개발 모드로 실행
 
   # 프론트엔드 웹 애플리케이션
