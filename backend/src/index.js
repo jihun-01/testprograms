@@ -42,7 +42,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/shipments', shipmentRoutes);
 
 // 헬스 체크 엔드포인트
-app.get('api/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
