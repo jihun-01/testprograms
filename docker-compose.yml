@@ -19,6 +19,12 @@ services:
       - mysql-data:/var/lib/mysql
     networks:
       - logistics-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # 백엔드 API 서버
   backend:
@@ -26,7 +32,8 @@ services:
     container_name: logistics-backend
     restart: always
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
       - NODE_ENV=development
       - PORT=3000

@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 
 // 환경 변수에서 데이터베이스 설정 로드
-const DB_HOST = process.env.DB_HOST || 'mysql-service';
+const DB_HOST = process.env.DB_HOST || 'mysql';
 const DB_PORT = process.env.DB_PORT || '3306';
 const DB_NAME = process.env.DB_NAME || 'logistics_db';
 const DB_USER = process.env.DB_USER || 'logistics_user';
