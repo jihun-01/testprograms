@@ -34,6 +34,7 @@ const validateInventory = [
 
 // 재고 관련 엔드포인트
 router.get('/', inventoryController.getAllInventory);
+router.get('/stats', inventoryController.getStats);
 router.get('/:id', inventoryController.getInventoryById);
 router.post('/', auth.authenticate, validateInventory, inventoryController.createInventory);
 router.put('/:id', auth.authenticate, validateInventory, inventoryController.updateInventory);

@@ -75,8 +75,6 @@ const Order = sequelize.define('Order', {
 
 // 관계 설정
 Order.belongsTo(Customer, { foreignKey: 'customer_id' });
-Order.belongsTo(OrderStatus, { foreignKey: 'status_id', as: 'status' });
-Customer.hasMany(Order, { foreignKey: 'customer_id' });
-OrderStatus.hasMany(Order, { foreignKey: 'status_id' });
+Order.belongsTo(OrderStatus, { foreignKey: 'status_id' });
 
 module.exports = { Order, OrderStatus };

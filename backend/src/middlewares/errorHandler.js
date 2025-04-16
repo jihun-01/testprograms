@@ -1,4 +1,4 @@
-const { metrics } = require('../utils/metrics');
+const { httpRequestCounter } = require('../utils/metrics');
 
 // 에러 처리 미들웨어
 const errorHandler = (err, req, res, next) => {
@@ -25,7 +25,7 @@ const errorHandler = (err, req, res, next) => {
   }
   
   // 에러 메트릭 기록
-  metrics.httpRequestCounter.inc({
+  httpRequestCounter.inc({
     method: req.method,
     endpoint: req.path,
     status_code: 500

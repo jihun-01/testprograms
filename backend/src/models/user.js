@@ -22,13 +22,13 @@ const User = sequelize.define('User', {
   },
   email: {
     type: DataTypes.STRING(100),
-    allowNull: true,
+    allowNull: false,
     unique: true
   },
-  is_admin: {
-    type: DataTypes.BOOLEAN,
+  role: {
+    type: DataTypes.ENUM('admin', 'user'),
     allowNull: false,
-    defaultValue: false
+    defaultValue: 'user'
   }
 }, {
   tableName: 'users',

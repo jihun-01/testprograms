@@ -28,6 +28,7 @@ const validateWarehouse = [
 
 // 창고 관련 엔드포인트
 router.get('/', warehouseController.getAllWarehouses);
+router.get('/stats', warehouseController.getStats);
 router.get('/:id', warehouseController.getWarehouseById);
 router.get('/:id/inventory-summary', warehouseController.getWarehouseInventorySummary);
 router.post('/', auth.authenticate, validateWarehouse, warehouseController.createWarehouse);

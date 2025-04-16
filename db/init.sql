@@ -1,3 +1,6 @@
+-- 데이터베이스 생성
+CREATE DATABASE IF NOT EXISTS logistics_db;
+
 -- 데이터베이스 선택
 USE logistics_db;
 

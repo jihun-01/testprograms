@@ -1,7 +1,5 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../utils/database');
-const { Order } = require('./order');
-const Warehouse = require('./warehouse');
 
 const Shipment = sequelize.define('Shipment', {
   id: {
@@ -48,11 +46,5 @@ const Shipment = sequelize.define('Shipment', {
   createdAt: 'created_at',
   updatedAt: 'updated_at'
 });
-
-// 관계 설정
-Shipment.belongsTo(Order, { foreignKey: 'order_id' });
-Shipment.belongsTo(Warehouse, { foreignKey: 'warehouse_id' });
-Order.hasMany(Shipment, { foreignKey: 'order_id' });
-Warehouse.hasMany(Shipment, { foreignKey: 'warehouse_id' });
 
 module.exports = Shipment;

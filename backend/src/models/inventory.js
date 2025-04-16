@@ -1,7 +1,5 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../utils/database');
-const Product = require('./product');
-const Warehouse = require('./warehouse');
 
 const Inventory = sequelize.define('Inventory', {
   id: {
@@ -59,11 +57,5 @@ const Inventory = sequelize.define('Inventory', {
     }
   ]
 });
-
-// 관계 설정
-Inventory.belongsTo(Product, { foreignKey: 'product_id' });
-Inventory.belongsTo(Warehouse, { foreignKey: 'warehouse_id' });
-Product.hasMany(Inventory, { foreignKey: 'product_id' });
-Warehouse.hasMany(Inventory, { foreignKey: 'warehouse_id' });
 
 module.exports = Inventory;

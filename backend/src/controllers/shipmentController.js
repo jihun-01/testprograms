@@ -6,48 +6,34 @@ const Product = require('../models/product');
 const { sequelize } = require('../utils/database');
 const { measureDbQuery } = require('../utils/metrics');
 const { Op } = require('sequelize');
+const Customer = require('../models/customer');
 
 // 모든 출고 조회
 exports.getAllShipments = async (req, res, next) => {
   try {
-    // 쿼리 파라미터로 필터링 조건 받기
-    const { order_id, warehouse_id, status, start_date, end_date } = req.query;
+    const { status } = req.query;
+    const where = {};
     
-    // 필터링 조건 구성
-    const whereCondition = {};
-    
-    if (order_id) params.order_id = order_id;
-    if (warehouse_id) params.warehouse_id = warehouse_id;
-    if (status) params.status = status;
-    
-    if (start_date || end_date) {
-      whereCondition.shipment_date = {};
-      
-      if (start_date) {
-        whereCondition.shipment_date[Op.gte] = new Date(start_date);
-      }
-      
-      if (end_date) {
-        whereCondition.shipment_date[Op.lte] = new Date(end_date);
-      }
+    if (status) {
+      where.status = status;
     }
     
-    // 메트릭 측정과 함께 쿼리 실행
     const shipments = await measureDbQuery(
       'findAll',
       'shipments',
       () => Shipment.findAll({
-        where: whereCondition,
+        where,
         include: [
           { 
             model: Order,
             include: [
-              { model: OrderStatus, as: 'status' }
+              { model: OrderStatus },
+              { model: Customer }
             ]
           },
           { model: Warehouse }
         ],
-        order: [['shipment_date', 'DESC']]
+        order: [['created_at', 'DESC']]
       })
     );
     
@@ -70,7 +56,7 @@ exports.getShipmentById = async (req, res, next) => {
           { 
             model: Order,
             include: [
-              { model: OrderStatus, as: 'status' },
+              { model: OrderStatus },
               { 
                 model: OrderDetail,
                 include: [
@@ -247,7 +233,7 @@ exports.updateShipmentStatus = async (req, res, next) => {
         include: [
           { 
             model: Order,
-            include: [{ model: OrderStatus, as: 'status' }]
+            include: [{ model: OrderStatus }]
           },
           { model: Warehouse }
         ]

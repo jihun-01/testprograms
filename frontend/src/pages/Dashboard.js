@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import { Row, Col, Card, Statistic, Spin, Button } from 'antd';
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -14,6 +14,7 @@ import {
   Legend,
 } from 'chart.js';
 import api from '../services/api';
+import { ShoppingCartOutlined, ShopOutlined, InboxOutlined, TruckOutlined } from '@ant-design/icons';
 
 // Chart.js 컴포넌트 등록
 ChartJS.register(
@@ -30,6 +31,7 @@ ChartJS.register(
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalWarehouses: 0,
@@ -57,6 +59,7 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null);
       
       // 통계 데이터 가져오기
       const [
@@ -66,28 +69,30 @@ const Dashboard = () => {
         shipmentsRes,
         inventoryRes,
         orderStatsRes,
-        warehouseStatsRes
+        warehouseStatsRes,
+        inventoryStatsRes
       ] = await Promise.all([
         api.get('/products'),
         api.get('/warehouses'),
         api.get('/orders'),
-        api.get('/shipments', { params: { status: '배송준비중' } }),
-        api.get('/inventory', { params: { low_stock: true } }),
+        api.get('/shipments?status=배송준비중'),
+        api.get('/inventory?low_stock=true'),
         api.get('/orders/stats'),
-        api.get('/warehouses/stats')
+        api.get('/warehouses/stats'),
+        api.get('/inventory/stats')
       ]);
 
-      // 통계 데이터 설정
+      // 통계 데이터 설정 (기본값 추가)
       setStats({
-        totalProducts: productsRes.data.length,
-        totalWarehouses: warehousesRes.data.length,
-        totalOrders: ordersRes.data.length,
-        pendingShipments: shipmentsRes.data.length,
-        lowStockItems: inventoryRes.data.length
+        totalProducts: productsRes?.data?.length || 0,
+        totalWarehouses: warehousesRes?.data?.length || 0,
+        totalOrders: ordersRes?.data?.length || 0,
+        pendingShipments: shipmentsRes?.data?.length || 0,
+        lowStockItems: inventoryRes?.data?.length || 0
       });
 
       // 주문 차트 데이터 설정
-      const orderStats = orderStatsRes.data;
+      const orderStats = orderStatsRes?.data || [];
       setOrderData({
         labels: orderStats.map(item => item.month),
         datasets: [
@@ -109,7 +114,7 @@ const Dashboard = () => {
       });
 
       // 창고별 재고 데이터
-      const warehouseStats = warehouseStatsRes.data;
+      const warehouseStats = warehouseStatsRes?.data || [];
       setWarehouseData({
         labels: warehouseStats.map(item => item.name),
         datasets: [
@@ -129,15 +134,15 @@ const Dashboard = () => {
       });
 
       // 재고 상태 데이터
-      const inventoryStats = await api.get('/inventory/stats');
+      const inventoryStats = inventoryStatsRes?.data || { normal: 0, low: 0, excess: 0 };
       setInventoryData({
         labels: ['적정 재고', '부족 재고', '과잉 재고'],
         datasets: [
           {
             data: [
-              inventoryStats.data.normal,
-              inventoryStats.data.low,
-              inventoryStats.data.excess
+              inventoryStats.normal || 0,
+              inventoryStats.low || 0,
+              inventoryStats.excess || 0
             ],
             backgroundColor: [
               'rgba(54, 162, 235, 0.6)',
@@ -151,6 +156,15 @@ const Dashboard = () => {
 
     } catch (error) {
       console.error('대시보드 데이터를 불러오는데 실패했습니다:', error);
+      setError('데이터를 불러오는데 실패했습니다. 잠시 후 다시 시도해주세요.');
+      // 기본 데이터 설정
+      setStats({
+        totalProducts: 0,
+        totalWarehouses: 0,
+        totalOrders: 0,
+        pendingShipments: 0,
+        lowStockItems: 0
+      });
     } finally {
       setLoading(false);
     }
@@ -158,132 +172,135 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <Container>
-        <div className="text-center my-5">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '400px' 
+      }}>
+        <Spin size="large">
+          <div style={{ padding: '50px', background: 'rgba(0, 0, 0, 0.05)', borderRadius: '4px' }}>
+            데이터를 불러오는 중...
           </div>
-        </div>
-      </Container>
+        </Spin>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>
+        <h2>오류 발생</h2>
+        <p>{error}</p>
+        <Button onClick={fetchDashboardData}>다시 시도</Button>
+      </div>
     );
   }
 
   return (
-    <Container fluid>
-      <h2 className="my-4">대시보드</h2>
-      
-      {/* 요약 카드 */}
-      <Row className="mb-4">
-        <Col md>
-          <Card className="h-100 bg-primary text-white">
-            <Card.Body>
-              <Card.Title>전체 상품</Card.Title>
-              <Card.Text className="display-4">{stats.totalProducts}</Card.Text>
-            </Card.Body>
+    <div>
+      <h1>대시보드</h1>
+      <Row gutter={16}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="총 주문 수"
+              value={stats.totalOrders}
+              prefix={<ShoppingCartOutlined />}
+            />
           </Card>
         </Col>
-        <Col md>
-          <Card className="h-100 bg-success text-white">
-            <Card.Body>
-              <Card.Title>전체 창고</Card.Title>
-              <Card.Text className="display-4">{stats.totalWarehouses}</Card.Text>
-            </Card.Body>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="총 창고 수"
+              value={stats.totalWarehouses}
+              prefix={<ShopOutlined />}
+            />
           </Card>
         </Col>
-        <Col md>
-          <Card className="h-100 bg-info text-white">
-            <Card.Body>
-              <Card.Title>전체 주문</Card.Title>
-              <Card.Text className="display-4">{stats.totalOrders}</Card.Text>
-            </Card.Body>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="총 재고 수"
+              value={stats.totalProducts}
+              prefix={<InboxOutlined />}
+            />
           </Card>
         </Col>
-        <Col md>
-          <Card className="h-100 bg-warning text-dark">
-            <Card.Body>
-              <Card.Title>배송 대기</Card.Title>
-              <Card.Text className="display-4">{stats.pendingShipments}</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md>
-          <Card className="h-100 bg-danger text-white">
-            <Card.Body>
-              <Card.Title>부족 재고</Card.Title>
-              <Card.Text className="display-4">{stats.lowStockItems}</Card.Text>
-            </Card.Body>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="배송 준비중"
+              value={stats.pendingShipments}
+              prefix={<TruckOutlined />}
+            />
           </Card>
         </Col>
       </Row>
       
-      {/* 차트 */}
-      <Row>
-        <Col lg={8}>
-          <Card className="mb-4">
-            <Card.Header>월별 주문 및 매출 추이</Card.Header>
-            <Card.Body>
-              <Line
-                data={orderData}
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: {
-                      position: 'top',
-                    },
-                    title: {
-                      display: false,
-                    },
+      <Row gutter={16} style={{ marginTop: '24px' }}>
+        <Col span={16}>
+          <Card title="월별 주문 및 매출 추이">
+            <Line
+              data={orderData}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: 'top',
                   },
-                }}
-              />
-            </Card.Body>
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }}
+            />
           </Card>
         </Col>
         
-        <Col lg={4}>
-          <Card className="mb-4">
-            <Card.Header>재고 상태</Card.Header>
-            <Card.Body>
-              <Pie
-                data={inventoryData}
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: {
-                      position: 'top',
-                    },
+        <Col span={8}>
+          <Card title="재고 상태">
+            <Pie
+              data={inventoryData}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    position: 'top',
                   },
-                }}
-              />
-            </Card.Body>
+                }
+              }}
+            />
           </Card>
         </Col>
       </Row>
       
-      <Row>
-        <Col>
-          <Card>
-            <Card.Header>창고별 재고 현황</Card.Header>
-            <Card.Body>
-              <Bar
-                data={warehouseData}
-                options={{
-                  responsive: true,
-                  plugins: {
-                    legend: {
-                      display: false,
-                    },
-                    title: {
-                      display: false,
-                    },
+      <Row style={{ marginTop: '24px' }}>
+        <Col span={24}>
+          <Card title="창고별 재고 현황">
+            <Bar
+              data={warehouseData}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: {
+                    display: false,
                   },
-                }}
-              />
-            </Card.Body>
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true
+                  }
+                }
+              }}
+            />
           </Card>
         </Col>
       </Row>
-    </Container>
+    </div>
   );
 };
 

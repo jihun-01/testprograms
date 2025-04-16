@@ -41,6 +41,22 @@ const OrderDetail = sequelize.define('OrderDetail', {
   unit_price: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
+  },
+  total_price: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false
+  },
+  status: {
+    type: DataTypes.ENUM('pending', 'processing', 'completed', 'cancelled'),
+    defaultValue: 'pending'
+  },
+  created_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
+  },
+  updated_at: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW
   }
 }, {
   tableName: 'order_details',

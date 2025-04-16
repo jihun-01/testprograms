@@ -27,10 +27,19 @@ const Login = () => {
       
       // 하드코딩된 자격 증명 확인 (test/test)
       if (values.username === 'test' && values.password === 'test') {
+        console.log("테스트 계정으로 로그인합니다...");
         // 테스트 사용자용 토큰 생성
         const mockToken = 'test-user-token-' + Date.now();
         localStorage.setItem('token', mockToken);
         localStorage.setItem('username', '테스트 사용자');
+        
+        // 테스트 데이터 초기화 (api.js에서 제공하는 함수)
+        try {
+          console.log("테스트 데이터를 초기화합니다...");
+          authService.generateTestData && authService.generateTestData();
+        } catch (e) {
+          console.warn("테스트 데이터 초기화 중 오류:", e);
+        }
         
         // 로그인 성공 후 대시보드로 이동
         navigate('/');

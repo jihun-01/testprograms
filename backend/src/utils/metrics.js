@@ -48,72 +48,59 @@ function setupPrometheusMetrics(app) {
   app.use((req, res, next) => {
     const start = Date.now();
     
-    // 응답이 완료되면 메트릭 기록
     res.on('finish', () => {
       const duration = (Date.now() - start) / 1000;
-      const path = req.route ? req.route.path : req.path;
       
-      // HTTP 요청 메트릭 기록
       httpRequestCounter.inc({
         method: req.method,
-        endpoint: path,
+        endpoint: req.path,
         status_code: res.statusCode
       });
       
-      httpRequestDuration.observe(
-        {
-          method: req.method,
-          endpoint: path,
-          status_code: res.statusCode
-        },
-        duration
-      );
+      httpRequestDuration.observe({
+        method: req.method,
+        endpoint: req.path,
+        status_code: res.statusCode
+      }, duration);
     });
     
     next();
   });
   
-  // Prometheus 메트릭 엔드포인트
-  app.get('/metrics', async (req, res) => {
+  // 메트릭 엔드포인트
+  app.get('/api/metrics', async (req, res) => {
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
   });
 }
 
 // 데이터베이스 쿼리 측정 함수
-function measureDbQuery(operation, table, queryFn) {
-  return async (...args) => {
-    const start = Date.now();
-    try {
-      const result = await queryFn(...args);
-      
-      // 데이터베이스 쿼리 메트릭 기록
-      dbQueryCounter.inc({ operation, table });
-      dbQueryDuration.observe(
-        { operation, table },
-        (Date.now() - start) / 1000
-      );
-      
-      return result;
-    } catch (error) {
-      dbQueryCounter.inc({ operation, table });
-      dbQueryDuration.observe(
-        { operation, table },
-        (Date.now() - start) / 1000
-      );
-      throw error;
-    }
-  };
+async function measureDbQuery(operation, table, queryFn) {
+  const start = Date.now();
+  
+  try {
+    const result = await queryFn();
+    
+    const duration = (Date.now() - start) / 1000;
+    dbQueryCounter.inc({ operation, table });
+    dbQueryDuration.observe({ operation, table }, duration);
+    
+    return result;
+  } catch (error) {
+    const duration = (Date.now() - start) / 1000;
+    dbQueryCounter.inc({ operation, table });
+    dbQueryDuration.observe({ operation, table }, duration);
+    
+    throw error;
+  }
 }
 
 module.exports = {
-  register,
   setupPrometheusMetrics,
   measureDbQuery,
-  metrics: {
-    httpRequestCounter,
-    httpRequestDuration,
-    dbQueryCounter,
-    dbQueryDuration
-  }
+  httpRequestCounter,
+  httpRequestDuration,
+  dbQueryCounter,
+  dbQueryDuration,
+  register
 };

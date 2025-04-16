@@ -1,5 +1,6 @@
 const Warehouse = require('../models/warehouse');
 const Inventory = require('../models/inventory');
+const Product = require('../models/product');
 const { measureDbQuery } = require('../utils/metrics');
 const { Op } = require('sequelize');
 const { sequelize } = require('../utils/database');
@@ -190,6 +191,84 @@ exports.getWarehouseInventorySummary = async (req, res, next) => {
       warehouse_name: warehouse.name,
       ...inventorySummary[0].dataValues
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 창고 통계 정보 반환
+exports.getStats = async (req, res, next) => {
+  try {
+    const stats = await measureDbQuery(
+      'findAll',
+      'warehouses',
+      () => Warehouse.findAll({
+        attributes: [
+          'id',
+          'name',
+          [sequelize.fn('COUNT', sequelize.col('Inventories.id')), 'total_items'],
+          [sequelize.fn('COALESCE', sequelize.fn('SUM', sequelize.col('Inventories.quantity')), 0), 'total_quantity'],
+          [sequelize.literal(`COALESCE(SUM(CASE WHEN Inventories.quantity <= Inventories.min_stock_level THEN 1 ELSE 0 END), 0)`), 'low_stock_items'],
+          [sequelize.literal(`COALESCE(SUM(CASE WHEN Inventories.max_stock_level IS NOT NULL AND Inventories.quantity >= Inventories.max_stock_level THEN 1 ELSE 0 END), 0)`), 'over_stock_items']
+        ],
+        include: [
+          {
+            model: Inventory,
+            attributes: [],
+            required: false
+          }
+        ],
+        group: ['id', 'name']
+      })
+    );
+
+    // 결과가 없는 경우 빈 배열 반환
+    if (!stats || stats.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // null 값을 0으로 변환
+    const formattedStats = stats.map(stat => ({
+      id: stat.id,
+      name: stat.name,
+      total_items: parseInt(stat.dataValues.total_items) || 0,
+      total_quantity: parseInt(stat.dataValues.total_quantity) || 0,
+      low_stock_items: parseInt(stat.dataValues.low_stock_items) || 0,
+      over_stock_items: parseInt(stat.dataValues.over_stock_items) || 0
+    }));
+
+    res.status(200).json(formattedStats);
+  } catch (error) {
+    console.error('창고 통계 조회 중 오류 발생:', error);
+    next(error);
+  }
+};
+
+// 창고 통계 조회
+exports.getWarehouseStats = async (req, res, next) => {
+  try {
+    const stats = await measureDbQuery(
+      'findAll',
+      'warehouses',
+      () => Warehouse.findAll({
+        attributes: [
+          'id',
+          'name',
+          'capacity',
+          [sequelize.fn('COUNT', sequelize.col('Inventories.id')), 'total_items'],
+          [sequelize.fn('SUM', sequelize.col('Inventories.quantity')), 'total_quantity']
+        ],
+        include: [
+          {
+            model: Inventory,
+            attributes: []
+          }
+        ],
+        group: ['Warehouse.id', 'Warehouse.name', 'Warehouse.capacity']
+      })
+    );
+
+    res.status(200).json(stats);
   } catch (error) {
     next(error);
   }

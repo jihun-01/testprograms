@@ -13,19 +13,23 @@ const warehouseRoutes = require('./routes/warehouseRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const shipmentRoutes = require('./routes/shipmentRoutes');
+const customerRoutes = require('./routes/customerRoutes');
 
 // 데이터베이스 연결
 const { connectToDatabase } = require('./utils/database');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
 // 미들웨어
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*', // 프론트엔드 URL 설정
+  origin: 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 app.use(express.json());
 app.use(morgan('combined'));
@@ -40,6 +44,7 @@ app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/shipments', shipmentRoutes);
+app.use('/api/customers', customerRoutes);
 
 // 헬스 체크 엔드포인트
 app.get('/api/health', (req, res) => {
@@ -55,7 +60,7 @@ async function startServer() {
     await connectToDatabase();
     console.log('Database connected successfully');
     
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {

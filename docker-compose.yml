@@ -7,10 +7,13 @@ services:
     container_name: logistics-mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: logistics_db
-      MYSQL_USER: logistics_user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-logistics_db}
+      MYSQL_USER: ${DB_USER:-logistics_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-password}
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+      LANG: C.UTF-8
     ports:
       - "3306:3306"
     volumes:
@@ -20,7 +23,7 @@ services:
     networks:
       - logistics-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-rootpassword}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,52 +31,61 @@ services:
 
   # 백엔드 API 서버
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: logistics-backend
-    restart: on-failure:5  # 최대 5번 재시도 (올바른 위치)
+    restart: on-failure:5
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      - NODE_ENV=development
-      - PORT=3000
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_NAME=logistics_db
-      - DB_USER=logistics_user
-      - DB_PASSWORD=password
-      - JWT_SECRET=your_jwt_secret_key
-      - BYPASS_AUTH=true
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=8080
+      - DB_HOST=${DB_HOST:-mysql}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-logistics_db}
+      - DB_USER=${DB_USER:-logistics_user}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - JWT_SECRET=${JWT_SECRET:-your_development_jwt_secret_key}
+      - BYPASS_AUTH=${BYPASS_AUTH:-true}
     ports:
-      - "3000:3000"
-      - "9090:9090"  # Prometheus 메트릭용 포트
+      - "8080:8080"
     volumes:
       - ./backend:/app
       - /app/node_modules
     networks:
       - logistics-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
-    command: npm run dev  # 개발 모드로 실행
+    command: npm start
 
   # 프론트엔드 웹 애플리케이션
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: logistics-frontend
     restart: always
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - REACT_APP_API_URL=http://localhost:8080/api
     ports:
-      - "8080:80"
+      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     networks:
       - logistics-network
+    command: npm start
 
   # Prometheus (모니터링)
   prometheus:
@@ -97,10 +109,10 @@ services:
       - prometheus
       - loki
     ports:
-      - "3001:3000"
+      - "3050:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning
@@ -117,7 +129,7 @@ services:
       - "3100:3100"
     volumes:
       - ./loki/loki-config.yaml:/etc/loki/loki.yaml
-      - loki-data:/data
+      - loki-data:/loki
     command: -config.file=/etc/loki/loki.yaml
     networks:
       - logistics-network

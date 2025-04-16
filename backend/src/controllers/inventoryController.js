@@ -24,7 +24,8 @@ exports.getAllInventory = async (req, res, next) => {
     
     if (low_stock === 'true') {
       whereCondition[Op.and] = [
-        { quantity: { [Op.lte]: sequelize.col('min_stock_level') } }
+        { quantity: { [Op.lte]: sequelize.col('min_stock_level') } },
+        { min_stock_level: { [Op.ne]: null } }
       ];
     }
     
@@ -35,8 +36,16 @@ exports.getAllInventory = async (req, res, next) => {
       () => Inventory.findAll({
         where: whereCondition,
         include: [
-          { model: Product },
-          { model: Warehouse }
+          { 
+            model: Product,
+            required: true,
+            attributes: ['id', 'name', 'price']
+          },
+          { 
+            model: Warehouse,
+            required: true,
+            attributes: ['id', 'name', 'location']
+          }
         ],
         order: [
           ['warehouse_id', 'ASC'],
@@ -47,6 +56,7 @@ exports.getAllInventory = async (req, res, next) => {
     
     res.status(200).json(inventory);
   } catch (error) {
+    console.error('재고 조회 중 오류 발생:', error);
     next(error);
   }
 };
@@ -223,6 +233,59 @@ exports.deleteInventory = async (req, res, next) => {
     
     res.status(200).json({ message: '재고 정보가 삭제되었습니다.' });
   } catch (error) {
+    next(error);
+  }
+};
+
+// 재고 통계 정보 반환
+exports.getStats = async (req, res, next) => {
+  try {
+    const stats = await measureDbQuery(
+      'findAll',
+      'inventory',
+      () => Inventory.findAll({
+        attributes: [
+          [sequelize.fn('COUNT', sequelize.col('Inventory.id')), 'total_items'],
+          [sequelize.fn('SUM', sequelize.col('quantity')), 'total_quantity'],
+          [sequelize.literal(`SUM(CASE WHEN quantity <= min_stock_level THEN 1 ELSE 0 END)`), 'low_stock_items'],
+          [sequelize.literal(`SUM(CASE WHEN max_stock_level IS NOT NULL AND quantity >= max_stock_level THEN 1 ELSE 0 END)`), 'over_stock_items']
+        ],
+        include: [
+          {
+            model: Product,
+            attributes: ['id', 'name'],
+            required: true
+          },
+          {
+            model: Warehouse,
+            attributes: ['id', 'name'],
+            required: true
+          }
+        ],
+        group: ['Product.id', 'Product.name', 'Warehouse.id', 'Warehouse.name']
+      })
+    );
+
+    // 결과가 없는 경우 빈 배열 반환
+    if (!stats || stats.length === 0) {
+      return res.status(200).json([]);
+    }
+
+    // null 값을 0으로 변환
+    const formattedStats = stats.map(stat => ({
+      product_id: stat.Product.id,
+      product_name: stat.Product.name,
+      warehouse_id: stat.Warehouse.id,
+      warehouse_name: stat.Warehouse.name,
+      total_items: parseInt(stat.dataValues.total_items) || 0,
+      total_quantity: parseInt(stat.dataValues.total_quantity) || 0,
+      low_stock_items: parseInt(stat.dataValues.low_stock_items) || 0,
+      over_stock_items: parseInt(stat.dataValues.over_stock_items) || 0
+    }));
+
+    res.status(200).json(formattedStats);
+  } catch (error) {
+    console.error('재고 통계 조회 중 오류 발생:', error);
     next(error);
   }
 };
